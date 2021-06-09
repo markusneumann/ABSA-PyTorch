@@ -148,7 +148,9 @@ class ABSADataset(Dataset):
             left_len = np.sum(left_indices != 0)
             aspect_len = np.sum(aspect_indices != 0)
             aspect_boundary = np.asarray([left_len, left_len + aspect_len - 1], dtype=np.int64)
-            polarity = int(polarity) + 1
+            #Note: adding 1 here only works when the labels are -1, 0, and 1
+            #For a two class problem, 0 and 1 are already correct
+            polarity = int(polarity)# + 1
 
             text_len = np.sum(text_indices != 0)
             concat_bert_indices = tokenizer.text_to_sequence('[CLS] ' + text_left + " " + aspect + " " + text_right + ' [SEP] ' + aspect + " [SEP]")
