@@ -11,6 +11,9 @@ import sys
 import random
 import numpy
 
+import pickle
+import pandas as pd
+
 from sklearn import metrics
 from time import strftime, localtime
 
@@ -140,6 +143,8 @@ class Instructor:
     def _evaluate_acc_f1(self, data_loader):
         n_correct, n_total = 0, 0
         t_targets_all, t_outputs_all = None, None
+        preds = []
+        ground_truth = []
         # switch model to evaluation mode
         self.model.eval()
         with torch.no_grad():
@@ -151,6 +156,9 @@ class Instructor:
                 n_correct += (torch.argmax(t_outputs, -1) == t_targets).sum().item()
                 n_total += len(t_outputs)
 
+                preds.append(torch.argmax(t_outputs, -1))
+                ground_truth.append(t_targets)
+
                 if t_targets_all is None:
                     t_targets_all = t_targets
                     t_outputs_all = t_outputs
@@ -161,6 +169,16 @@ class Instructor:
         acc = n_correct / n_total
         #removing the 2 label from labels=[0, 1, 2] for a two-class problem
         f1 = metrics.f1_score(t_targets_all.cpu(), torch.argmax(t_outputs_all, -1).cpu(), labels=[0, 1], average='macro')
+        
+        preds_np = torch.cat(preds, dim=0).cpu().numpy()
+        ground_truth_np = torch.cat(ground_truth, dim=0).cpu().numpy()
+        df_preds = pd.DataFrame({'prediction': preds_np, 'ground_truth': ground_truth_np})
+        df_preds.to_csv("test_predictions.csv")
+        
+        #test_preds = [preds, ground_truth]
+        #with open('test_predictions.pkl', 'wb') as fh:
+        #  pickle.dump(test_preds, fh)
+
         return acc, f1
 
     def run(self):
