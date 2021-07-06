@@ -145,6 +145,8 @@ class Instructor:
         t_targets_all, t_outputs_all = None, None
         preds = []
         ground_truth = []
+        probs_0 = []
+        probs_1 = []
         # switch model to evaluation mode
         self.model.eval()
         with torch.no_grad():
@@ -157,6 +159,8 @@ class Instructor:
                 n_total += len(t_outputs)
 
                 preds.append(torch.argmax(t_outputs, -1))
+                probs_0.append(t_outputs[:,0])
+                probs_1.append(t_outputs[:,1])
                 ground_truth.append(t_targets)
 
                 if t_targets_all is None:
@@ -172,7 +176,9 @@ class Instructor:
         
         preds_np = torch.cat(preds, dim=0).cpu().numpy()
         ground_truth_np = torch.cat(ground_truth, dim=0).cpu().numpy()
-        df_preds = pd.DataFrame({'prediction': preds_np, 'ground_truth': ground_truth_np})
+        probs_0_np = torch.cat(probs_0, dim=0).cpu().numpy()
+        probs_1_np = torch.cat(probs_1, dim=0).cpu().numpy()
+        df_preds = pd.DataFrame({'prediction': preds_np, 'ground_truth': ground_truth_np, 'probs_0': probs_0_np, 'probs_1': probs_1_np})
         df_preds.to_csv("test_predictions.csv")
         
         #test_preds = [preds, ground_truth]
